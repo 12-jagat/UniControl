@@ -24,7 +24,7 @@ export default function StudentsPage() {
   const [createForm, setCreateForm] = useState({
     name: "",
     email: "",
-    password: "",
+    password: "Student@123",
     departmentId: "",
     semester: 1,
   });
@@ -61,7 +61,7 @@ export default function StudentsPage() {
       setCreateForm({
         name: "",
         email: "",
-        password: "",
+        password: "Student@123",
         departmentId: "",
         semester: 1,
       });

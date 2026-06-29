@@ -30,7 +30,27 @@ const app: Application = express();
 // ─── Global Middleware ──────────────────────────────────────────────────────
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        process.env.CLIENT_URL,
+        "http://localhost:5173",
+        "http://localhost:3000",
+      ].filter(Boolean) as string[];
+
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+
+      // Allow any Vercel deployment URL for this project
+      if (
+        allowedOrigins.some(o => origin.startsWith(o)) ||
+        /https:\/\/uni-control[^.]*\.vercel\.app/.test(origin) ||
+        /https:\/\/unicontrol[^.]*\.vercel\.app/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      callback(new Error(`CORS blocked: ${origin}`));
+    },
     credentials: true,
   })
 );
