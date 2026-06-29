@@ -1,0 +1,11 @@
+import { Router } from "express";
+import * as feeController from "../controllers/fee.controller";
+import { authenticate, requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate);
+router.get("/", requireRole(Role.SUPER_ADMIN, Role.ADMIN), feeController.getFees);
+router.post("/", requireRole(Role.SUPER_ADMIN, Role.ADMIN), feeController.createFee);
+router.patch("/:id/pay", requireRole(Role.SUPER_ADMIN, Role.ADMIN, Role.STUDENT), feeController.markPaid);
+router.get("/student/:studentId", feeController.getStudentFees);
+export default router;

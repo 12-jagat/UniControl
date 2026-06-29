@@ -1,0 +1,12 @@
+import { Router } from "express";
+import * as deptController from "../controllers/department.controller";
+import { authenticate, requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate);
+router.get("/", deptController.getDepartments);
+router.get("/:id", deptController.getDepartmentById);
+router.post("/", requireRole(Role.SUPER_ADMIN, Role.ADMIN), deptController.createDepartment);
+router.put("/:id", requireRole(Role.SUPER_ADMIN, Role.ADMIN), deptController.updateDepartment);
+router.delete("/:id", requireRole(Role.SUPER_ADMIN, Role.ADMIN), deptController.deleteDepartment);
+export default router;

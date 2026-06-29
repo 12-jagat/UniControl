@@ -1,0 +1,11 @@
+﻿import { Router } from "express";
+import * as facultyController from "../controllers/faculty.controller";
+import { authenticate, requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate);
+router.get("/", facultyController.getFaculty);
+router.get("/:id", facultyController.getProfessorById);
+router.post("/", requireRole(Role.SUPER_ADMIN, Role.ADMIN), facultyController.createProfessor);
+router.put("/:id", requireRole(Role.SUPER_ADMIN, Role.ADMIN), facultyController.updateProfessor);
+export default router;

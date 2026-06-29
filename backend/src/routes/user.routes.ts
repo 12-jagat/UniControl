@@ -1,0 +1,13 @@
+﻿import { Router } from "express";
+import * as userController from "../controllers/user.controller";
+import { authenticate } from "../middleware/auth.middleware";
+import { requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate);
+router.get("/me", userController.getMe);
+router.get("/", requireRole(Role.SUPER_ADMIN, Role.ADMIN), userController.getUsers);
+router.get("/:id", userController.getUserById);
+router.put("/:id", userController.updateUser);
+router.patch("/:id/toggle-status", requireRole(Role.SUPER_ADMIN, Role.ADMIN), userController.toggleStatus);
+export default router;

@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  PROFESSOR
+  STUDENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum FeeStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  GRADED
+  LATE
+  MISSING
+}
+
+// ─── User ─────────────────────────────────────────────────────────────────────
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(STUDENT)
+  avatarUrl    String?
+  phone        String?
+  address      String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  student    Student?
+  professor  Professor?
+  notices    Notice[]
+  auditLogs  AuditLog[]
+
+  @@map("users")
+}
+
+// ─── Department ───────────────────────────────────────────────────────────────
+model Department {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  code        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  professors  Professor[]
+  students    Student[]
+  courses     Course[]
+
+  @@map("departments")
+}
+
+// ─── Professor ───────────────────────────────────────────────────────────────
+model Professor {
+  id           String     @id @default(cuid())
+  employeeId   String     @unique
+  title        String?
+  specialization String?
+  joiningDate  DateTime
+  userId       String     @unique
+  departmentId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   Department @relation(fields: [departmentId], references: [id])
+  courses      Course[]
+
+  @@map("professors")
+}
+
+// ─── Student ─────────────────────────────────────────────────────────────────
+model Student {
+  id             String     @id @default(cuid())
+  studentId      String     @unique
+  enrollmentYear Int
+  semester       Int        @default(1)
+  userId         String     @unique
+  departmentId   String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department     Department @relation(fields: [departmentId], references: [id])
+  enrollments    Enrollment[]
+  fees           Fee[]
+  submissions    Submission[]
+  results        Result[]
+
+  @@map("students")
+}
+
+// ─── Course ──────────────────────────────────────────────────────────────────
+model Course {
+  id           String     @id @default(cuid())
+  code         String     @unique
+  title        String
+  description  String?
+  creditHours  Int        @default(3)
+  maxStudents  Int        @default(60)
+  departmentId String
+  professorId  String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  department   Department @relation(fields: [departmentId], references: [id])
+  professor    Professor? @relation(fields: [professorId], references: [id])
+  enrollments  Enrollment[]
+  assignments  Assignment[]
+  exams        Exam[]
+
+  @@map("courses")
+}
+
+// ─── Enrollment ──────────────────────────────────────────────────────────────
+model Enrollment {
+  id        String   @id @default(cuid())
+  studentId String
+  courseId  String
+  semester  String
+  grade     String?
+  createdAt DateTime @default(now())
+
+  student     Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course      Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+
+  @@unique([studentId, courseId, semester])
+  @@map("enrollments")
+}
+
+// ─── Attendance ──────────────────────────────────────────────────────────────
+model Attendance {
+  id           String           @id @default(cuid())
+  enrollmentId String
+  date         DateTime         @db.Date
+  status       AttendanceStatus @default(PRESENT)
+  remarks      String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, date])
+  @@map("attendances")
+}
+
+// ─── Assignment ───────────────────────────────────────────────────────────────
+model Assignment {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  courseId     String
+  maxScore     Float    @default(100)
+  dueDate      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  course       Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  submissions  Submission[]
+
+  @@map("assignments")
+}
+
+// ─── Submission ───────────────────────────────────────────────────────────────
+model Submission {
+  id           String           @id @default(cuid())
+  assignmentId String
+  studentId    String
+  fileUrl      String?
+  content      String?
+  score        Float?
+  feedback     String?
+  status       SubmissionStatus @default(SUBMITTED)
+  submittedAt  DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@map("submissions")
+}
+
+// ─── Exam ─────────────────────────────────────────────────────────────────────
+model Exam {
+  id        String   @id @default(cuid())
+  title     String
+  courseId  String
+  date      DateTime
+  duration  Int      // in minutes
+  maxScore  Float    @default(100)
+  venue     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  results Result[]
+
+  @@map("exams")
+}
+
+// ─── Result ──────────────────────────────────────────────────────────────────
+model Result {
+  id        String   @id @default(cuid())
+  examId    String
+  studentId String
+  score     Float
+  grade     String?
+  remarks   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exam    Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, studentId])
+  @@map("results")
+}
+
+// ─── Fee ─────────────────────────────────────────────────────────────────────
+model Fee {
+  id          String    @id @default(cuid())
+  studentId   String
+  amount      Float
+  description String?
+  dueDate     DateTime
+  paidAt      DateTime?
+  status      FeeStatus @default(PENDING)
+  semester    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("fees")
+}
+
+// ─── Notice ──────────────────────────────────────────────────────────────────
+model Notice {
+  id           String    @id @default(cuid())
+  title        String
+  content      String
+  authorId     String
+  targetRole   Role?
+  targetUserId String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  author User @relation(fields: [authorId], references: [id])
+
+  @@map("notices")
+}
+
+// ─── AuditLog ────────────────────────────────────────────────────────────────
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  userId    String
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}

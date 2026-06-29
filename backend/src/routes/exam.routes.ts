@@ -1,0 +1,12 @@
+﻿import { Router } from "express";
+import * as examController from "../controllers/exam.controller";
+import { authenticate, requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate);
+router.get("/", examController.getExams);
+router.post("/", requireRole(Role.PROFESSOR, Role.ADMIN, Role.SUPER_ADMIN), examController.createExam);
+router.post("/results", requireRole(Role.PROFESSOR, Role.ADMIN, Role.SUPER_ADMIN), examController.publishResult);
+router.get("/results/student/:studentId", examController.getResultsByStudent);
+router.get("/:examId/results", examController.getResultsByExam);
+export default router;

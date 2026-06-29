@@ -1,0 +1,11 @@
+﻿import { Router } from "express";
+import * as noticeController from "../controllers/notice.controller";
+import { authenticate, requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate);
+router.get("/", noticeController.getNotices);
+router.post("/", requireRole(Role.SUPER_ADMIN, Role.ADMIN, Role.PROFESSOR), noticeController.createNotice);
+router.put("/:id", requireRole(Role.SUPER_ADMIN, Role.ADMIN), noticeController.updateNotice);
+router.delete("/:id", requireRole(Role.SUPER_ADMIN, Role.ADMIN), noticeController.deleteNotice);
+export default router;

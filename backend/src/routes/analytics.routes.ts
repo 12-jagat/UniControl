@@ -1,0 +1,12 @@
+﻿import { Router } from "express";
+import * as analyticsController from "../controllers/analytics.controller";
+import { authenticate, requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate, requireRole(Role.SUPER_ADMIN, Role.ADMIN));
+router.get("/dashboard", analyticsController.getDashboard);
+router.get("/enrollment-trend", analyticsController.getEnrollmentTrend);
+router.get("/attendance-overview", analyticsController.getAttendanceOverview);
+router.get("/fee-collection", analyticsController.getFeeCollection);
+router.get("/top-courses", analyticsController.getTopCourses);
+export default router;

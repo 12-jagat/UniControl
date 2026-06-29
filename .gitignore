@@ -1,0 +1,18 @@
+# Env Files
+backend/.env
+backend/.env.local
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+frontend/.env.development
+frontend/.env.*.local
+
+# Dependency folders
+**/node_modules/
+
+# Build artifacts
+**/dist/
+**/*.tsbuildinfo
+
+# Logs
+**/*.log

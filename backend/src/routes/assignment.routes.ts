@@ -1,0 +1,13 @@
+import { Router } from "express";
+import * as assignmentController from "../controllers/assignment.controller";
+import { authenticate, requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate);
+router.get("/", assignmentController.getAssignments);
+router.post("/", requireRole(Role.PROFESSOR, Role.ADMIN, Role.SUPER_ADMIN), assignmentController.createAssignment);
+router.post("/submit", requireRole(Role.STUDENT), assignmentController.submitAssignment);
+router.get("/:assignmentId/my-submission", requireRole(Role.STUDENT), assignmentController.getMySubmission);
+router.get("/:assignmentId/submissions", requireRole(Role.PROFESSOR, Role.ADMIN, Role.SUPER_ADMIN), assignmentController.getSubmissions);
+router.patch("/submissions/:submissionId/grade", requireRole(Role.PROFESSOR, Role.ADMIN, Role.SUPER_ADMIN), assignmentController.gradeSubmission);
+export default router;

@@ -1,0 +1,11 @@
+﻿import { Router } from "express";
+import * as attendanceController from "../controllers/attendance.controller";
+import { authenticate, requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate);
+router.post("/mark", requireRole(Role.PROFESSOR, Role.ADMIN, Role.SUPER_ADMIN), attendanceController.markAttendance);
+router.post("/bulk", requireRole(Role.PROFESSOR, Role.ADMIN, Role.SUPER_ADMIN), attendanceController.bulkMark);
+router.get("/enrollment/:enrollmentId", attendanceController.getAttendance);
+router.get("/enrollment/:enrollmentId/summary", attendanceController.getSummary);
+export default router;

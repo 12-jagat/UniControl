@@ -1,0 +1,12 @@
+﻿import { Router } from "express";
+import * as studentController from "../controllers/student.controller";
+import { authenticate, requireRole } from "../middleware/auth.middleware";
+import { Role } from "../types";
+const router = Router();
+router.use(authenticate);
+router.get("/", studentController.getStudents);
+router.get("/:id", studentController.getStudentById);
+router.post("/", requireRole(Role.SUPER_ADMIN, Role.ADMIN), studentController.createStudent);
+router.put("/:id", requireRole(Role.SUPER_ADMIN, Role.ADMIN), studentController.updateStudent);
+router.delete("/:id", requireRole(Role.SUPER_ADMIN), studentController.deleteStudent);
+export default router;
