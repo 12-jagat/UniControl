@@ -24,7 +24,7 @@ export default function FacultyPage() {
   const [createForm, setCreateForm] = useState({
     name: "",
     email: "",
-    password: "Prof@123",
+    password: "",
     departmentId: "",
     employeeTitle: "Professor",
   });
@@ -61,7 +61,7 @@ export default function FacultyPage() {
       setCreateForm({
         name: "",
         email: "",
-        password: "Prof@123",
+        password: "",
         departmentId: "",
         employeeTitle: "Professor",
       });
